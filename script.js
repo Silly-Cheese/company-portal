@@ -2,6 +2,8 @@
 const users = {
     Executive_Eagle: { password: "341479", role: "admin" },
     Test: { password: "Employee123", role: "employee" }
+    Seal: { password: "Freaky", role: "admin" },
+    Cody: { password: "Nitro", role: "admin" }
 };
 
 // Login System
