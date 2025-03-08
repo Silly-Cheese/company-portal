@@ -10,9 +10,13 @@
     <div class="nav-bar">
         <button onclick="showTab('announcements')">📢 Announcements</button>
         <button onclick="showTab('log-activity')">📝 Log Activity</button>
-        <button onclick="showTab('admin-logs')">🔍 Admin Logs</button>
+        <button id="admin-logs-btn" onclick="showTab('admin-logs')">🔍 Admin Logs</button>
+        <button id="pending-users-btn" onclick="showTab('pending-users')">👥 Pending Users</button>
         <button onclick="logout()">🚪 Logout</button>
     </div>
+
+    <!-- Announcements banner -->
+    <div id="announcements-banner" class="announcements-banner"></div>
 
     <div id="announcements" class="tab-content">
         <h2>Company Announcements</h2>
@@ -29,6 +33,11 @@
     <div id="admin-logs" class="tab-content" style="display:none;">
         <h2>Admin Activity Logs</h2>
         <ul id="activity-log-list"></ul>
+    </div>
+
+    <div id="pending-users" class="tab-content" style="display:none;">
+        <h2>Pending User Approvals</h2>
+        <ul id="pending-users-list"></ul>
     </div>
 
     <script src="script.js"></script>
