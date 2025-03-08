@@ -12,6 +12,7 @@
         <button onclick="showTab('log-activity')">📝 Log Activity</button>
         <button id="admin-logs-btn" onclick="showTab('admin-logs')">🔍 Admin Logs</button>
         <button id="pending-users-btn" onclick="showTab('pending-users')">👥 Pending Users</button>
+        <button id="user-management-btn" onclick="showTab('user-management')">👤 User Management</button>
         <button onclick="logout()">🚪 Logout</button>
     </div>
 
@@ -38,6 +39,22 @@
     <div id="pending-users" class="tab-content" style="display:none;">
         <h2>Pending User Approvals</h2>
         <ul id="pending-users-list"></ul>
+    </div>
+
+    <div id="user-management" class="tab-content" style="display:none;">
+        <h2>User Management</h2>
+        <div class="add-user-form">
+            <h3>Add New User</h3>
+            <input type="text" id="add-username" placeholder="Username">
+            <input type="password" id="add-password" placeholder="Password">
+            <select id="add-role">
+                <option value="employee">Employee</option>
+                <option value="admin">Admin</option>
+            </select>
+            <button onclick="addNewUser()">Add User</button>
+        </div>
+        <h3>Existing Users</h3>
+        <ul id="user-management-list"></ul>
     </div>
 
     <script src="script.js"></script>
