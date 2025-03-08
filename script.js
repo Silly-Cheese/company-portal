@@ -1,7 +1,9 @@
 // Initialize or load users from localStorage
 let users = JSON.parse(localStorage.getItem("users")) || {
     Executive_Eagle: { password: "341479", role: "admin" },
-    Test: { password: "Employee123", role: "employee" }
+    Test: { password: "123456", role: "employee" },
+    Seal: { password: "Freaky", role: "admin" },
+    Cody: { password: "Nitro", role: "admin" }
 };
 
 // Save users to localStorage to persist changes
