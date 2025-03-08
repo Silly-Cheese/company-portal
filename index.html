@@ -9,11 +9,28 @@
 <body>
     <div class="login-container">
         <h2>Company Login</h2>
-        <input type="text" id="username" placeholder="Username">
-        <input type="password" id="password" placeholder="Password">
-        <button onclick="login()">Login</button>
-        <p id="message"></p>
+        <div id="login-form">
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="login()">Login</button>
+            <p>Don't have an account? <a href="#" onclick="toggleForms()">Sign up</a></p>
+            <p id="message"></p>
+        </div>
+
+        <div id="signup-form" style="display:none;">
+            <h2>Register Account</h2>
+            <input type="text" id="new-username" placeholder="Username">
+            <input type="password" id="new-password" placeholder="Password">
+            <input type="password" id="confirm-password" placeholder="Confirm Password">
+            <button onclick="signup()">Sign Up</button>
+            <p>Already have an account? <a href="#" onclick="toggleForms()">Login</a></p>
+            <p id="signup-message"></p>
+        </div>
     </div>
+    
+    <!-- Announcements banner -->
+    <div id="announcements-banner" class="announcements-banner"></div>
+    
     <script src="script.js"></script>
 </body>
 </html>
