@@ -1,9 +1,65 @@
 // Hardcoded Users (Admins and Employees)
 const users = {
     Executive_Eagle: { password: "341479", role: "admin" },
-    Test: { password: "Employee123", role: "employee" },
-    Seal: { password: "Freaky", role: "admin" }
+    Test: { password: "Employee123", role: "employee" }
 };
+
+// Initialize pending users if not exists
+if (!localStorage.getItem("pendingUsers")) {
+    localStorage.setItem("pendingUsers", JSON.stringify([]));
+}
+
+// Toggle between login and signup forms
+function toggleForms() {
+    const loginForm = document.getElementById("login-form");
+    const signupForm = document.getElementById("signup-form");
+    
+    if (loginForm && signupForm) {
+        if (loginForm.style.display === "none") {
+            loginForm.style.display = "block";
+            signupForm.style.display = "none";
+        } else {
+            loginForm.style.display = "none";
+            signupForm.style.display = "block";
+        }
+    }
+}
+
+// Signup Function
+function signup() {
+    const username = document.getElementById("new-username").value;
+    const password = document.getElementById("new-password").value;
+    const confirmPassword = document.getElementById("confirm-password").value;
+    const messageElement = document.getElementById("signup-message");
+    
+    // Basic validation
+    if (!username || !password) {
+        messageElement.textContent = "Username and password are required!";
+        return;
+    }
+    
+    if (password !== confirmPassword) {
+        messageElement.textContent = "Passwords do not match!";
+        return;
+    }
+    
+    if (users[username]) {
+        messageElement.textContent = "Username already exists!";
+        return;
+    }
+    
+    // Add to pending users
+    let pendingUsers = JSON.parse(localStorage.getItem("pendingUsers")) || [];
+    pendingUsers.push({ username, password });
+    localStorage.setItem("pendingUsers", JSON.stringify(pendingUsers));
+    
+    messageElement.textContent = "Sign-up request submitted! Waiting for admin approval.";
+    
+    // Clear form
+    document.getElementById("new-username").value = "";
+    document.getElementById("new-password").value = "";
+    document.getElementById("confirm-password").value = "";
+}
 
 // Login System
 function login() {
@@ -11,6 +67,7 @@ function login() {
     const password = document.getElementById("password").value;
 
     if (users[username] && users[username].password === password) {
+        localStorage.setItem("currentUser", username);
         localStorage.setItem("userRole", users[username].role);
         window.location.href = "dashboard.html";
     } else {
@@ -21,6 +78,7 @@ function login() {
 // Logout Function
 function logout() {
     localStorage.removeItem("userRole");
+    localStorage.removeItem("currentUser");
     window.location.href = "index.html";
 }
 
@@ -37,9 +95,15 @@ function postAnnouncement() {
     const announcement = document.getElementById("new-announcement").value;
     if (announcement) {
         let announcements = JSON.parse(localStorage.getItem("announcements")) || [];
-        announcements.push(announcement);
+        const newAnnouncement = {
+            text: announcement,
+            timestamp: new Date().toLocaleString(),
+            author: localStorage.getItem("currentUser") || "Unknown"
+        };
+        announcements.push(newAnnouncement);
         localStorage.setItem("announcements", JSON.stringify(announcements));
         loadAnnouncements();
+        loadAnnouncementsBanner();
         document.getElementById("new-announcement").value = "";
     }
 }
@@ -50,9 +114,9 @@ function loadAnnouncements() {
     if (list) {
         list.innerHTML = "";
         let announcements = JSON.parse(localStorage.getItem("announcements")) || [];
-        announcements.forEach((text, index) => {
+        announcements.forEach((announcement, index) => {
             const li = document.createElement("li");
-            li.textContent = text;
+            li.innerHTML = `<strong>${announcement.author}</strong> (${announcement.timestamp}): ${announcement.text}`;
 
             // Add delete button
             const deleteBtn = document.createElement("button");
@@ -71,6 +135,25 @@ function deleteAnnouncement(index) {
     announcements.splice(index, 1);
     localStorage.setItem("announcements", JSON.stringify(announcements));
     loadAnnouncements();
+    loadAnnouncementsBanner();
+}
+
+// Load Announcements Banner for display across the site
+function loadAnnouncementsBanner() {
+    const banner = document.getElementById("announcements-banner");
+    if (banner) {
+        banner.innerHTML = "";
+        let announcements = JSON.parse(localStorage.getItem("announcements")) || [];
+        
+        if (announcements.length > 0) {
+            // Display the most recent announcement in the banner
+            const latest = announcements[announcements.length - 1];
+            banner.textContent = `${latest.text} - ${latest.author}`;
+            banner.style.display = "block";
+        } else {
+            banner.style.display = "none";
+        }
+    }
 }
 
 // Log Activity Function (Prompts Based on Selection)
@@ -96,7 +179,9 @@ function logActivity() {
 // Save Activity Log
 function saveActivity(logEntry) {
     let logs = JSON.parse(localStorage.getItem("activityLogs")) || [];
-    logs.push(logEntry);
+    const user = localStorage.getItem("currentUser") || "Unknown";
+    const timestamp = new Date().toLocaleString();
+    logs.push(`${user} (${timestamp}): ${logEntry}`);
     localStorage.setItem("activityLogs", JSON.stringify(logs));
     alert("Activity logged successfully!");
 }
@@ -115,8 +200,114 @@ function loadActivityLogs() {
     }
 }
 
+// Load Pending Users for Admin Approval
+function loadPendingUsers() {
+    const list = document.getElementById("pending-users-list");
+    if (list) {
+        list.innerHTML = "";
+        let pendingUsers = JSON.parse(localStorage.getItem("pendingUsers")) || [];
+        
+        if (pendingUsers.length === 0) {
+            const li = document.createElement("li");
+            li.textContent = "No pending user approvals.";
+            list.appendChild(li);
+            return;
+        }
+        
+        pendingUsers.forEach((user, index) => {
+            const li = document.createElement("li");
+            li.textContent = user.username;
+            
+            // Add approve and deny buttons
+            const approveBtn = document.createElement("button");
+            approveBtn.textContent = "✅ Approve";
+            approveBtn.className = "approve-btn";
+            approveBtn.onclick = function() { approveUser(index); };
+            
+            const denyBtn = document.createElement("button");
+            denyBtn.textContent = "❌ Deny";
+            denyBtn.className = "deny-btn";
+            denyBtn.onclick = function() { denyUser(index); };
+            
+            const buttonDiv = document.createElement("div");
+            buttonDiv.appendChild(approveBtn);
+            buttonDiv.appendChild(denyBtn);
+            li.appendChild(buttonDiv);
+            
+            list.appendChild(li);
+        });
+    }
+}
+
+// Approve User
+function approveUser(index) {
+    let pendingUsers = JSON.parse(localStorage.getItem("pendingUsers")) || [];
+    const user = pendingUsers[index];
+    
+    // Add to users object
+    users[user.username] = { password: user.password, role: "employee" };
+    
+    // Remove from pending users
+    pendingUsers.splice(index, 1);
+    localStorage.setItem("pendingUsers", JSON.stringify(pendingUsers));
+    
+    // Log the approval
+    saveActivity(`Approved new user: ${user.username}`);
+    
+    // Reload the list
+    loadPendingUsers();
+    
+    alert(`User ${user.username} has been approved!`);
+}
+
+// Deny User
+function denyUser(index) {
+    let pendingUsers = JSON.parse(localStorage.getItem("pendingUsers")) || [];
+    const username = pendingUsers[index].username;
+    
+    // Remove from pending users
+    pendingUsers.splice(index, 1);
+    localStorage.setItem("pendingUsers", JSON.stringify(pendingUsers));
+    
+    // Log the denial
+    saveActivity(`Denied user request: ${username}`);
+    
+    // Reload the list
+    loadPendingUsers();
+    
+    alert(`User request for ${username} has been denied.`);
+}
+
+// Check User Permissions and Update UI
+function checkPermissions() {
+    const userRole = localStorage.getItem("userRole");
+    
+    // Hide admin-only elements for non-admin users
+    if (userRole !== "admin") {
+        // Hide admin logs button
+        const adminLogsBtn = document.getElementById("admin-logs-btn");
+        if (adminLogsBtn) {
+            adminLogsBtn.style.display = "none";
+        }
+        
+        // Hide pending users button
+        const pendingUsersBtn = document.getElementById("pending-users-btn");
+        if (pendingUsersBtn) {
+            pendingUsersBtn.style.display = "none";
+        }
+    }
+}
+
 // Ensure Data Loads When Dashboard Opens
 window.onload = function() {
+    loadAnnouncementsBanner();
     loadAnnouncements();
     loadActivityLogs();
+    loadPendingUsers();
+    checkPermissions();
+    
+    // If on dashboard page, show announcements tab by default
+    if (window.location.href.includes("dashboard.html")) {
+        showTab("announcements");
+    }
 };
