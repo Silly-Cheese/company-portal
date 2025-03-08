@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="nav-bar">
+        <button onclick="showTab('announcements')">📢 Announcements</button>
+        <button onclick="showTab('log-activity')">📝 Log Activity</button>
+        <button onclick="showTab('admin-logs')">🔍 Admin Logs</button>
+        <button onclick="logout()">🚪 Logout</button>
+    </div>
+
+    <div id="announcements" class="tab-content">
+        <h2>Company Announcements</h2>
+        <textarea id="new-announcement" placeholder="Enter announcement"></textarea>
+        <button onclick="postAnnouncement()">Post</button>
+        <ul id="announcement-list"></ul>
+    </div>
+
+    <div id="log-activity" class="tab-content" style="display:none;">
+        <h2>Log Activity</h2>
+        <button onclick="logActivity()">Log Activity</button>
+    </div>
+
+    <div id="admin-logs" class="tab-content" style="display:none;">
+        <h2>Admin Activity Logs</h2>
+        <ul id="activity-log-list"></ul>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
