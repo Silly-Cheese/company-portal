@@ -1,13 +1,22 @@
-// Hardcoded Users (Admins and Employees)
-const users = {
+// Initialize or load users from localStorage
+let users = JSON.parse(localStorage.getItem("users")) || {
     Executive_Eagle: { password: "341479", role: "admin" },
     Test: { password: "Employee123", role: "employee" }
 };
+
+// Save users to localStorage to persist changes
+if (!localStorage.getItem("users")) {
+    localStorage.setItem("users", JSON.stringify(users));
+}
 
 // Initialize pending users if not exists
 if (!localStorage.getItem("pendingUsers")) {
     localStorage.setItem("pendingUsers", JSON.stringify([]));
 }
+
+// Check for announcements updates every 10 seconds
+const ANNOUNCEMENT_CHECK_INTERVAL = 10000; // 10 seconds
+let lastAnnouncementTimestamp = Date.now();
 
 // Toggle between login and signup forms
 function toggleForms() {
@@ -43,6 +52,9 @@ function signup() {
         return;
     }
     
+    // Load latest users list
+    users = JSON.parse(localStorage.getItem("users")) || {};
+    
     if (users[username]) {
         messageElement.textContent = "Username already exists!";
         return;
@@ -65,6 +77,9 @@ function signup() {
 function login() {
     const username = document.getElementById("username").value;
     const password = document.getElementById("password").value;
+    
+    // Get latest users list
+    users = JSON.parse(localStorage.getItem("users")) || {};
 
     if (users[username] && users[username].password === password) {
         localStorage.setItem("currentUser", username);
@@ -98,6 +113,7 @@ function postAnnouncement() {
         const newAnnouncement = {
             text: announcement,
             timestamp: new Date().toLocaleString(),
+            date: Date.now(), // For sorting and comparing
             author: localStorage.getItem("currentUser") || "Unknown"
         };
         announcements.push(newAnnouncement);
@@ -105,6 +121,7 @@ function postAnnouncement() {
         loadAnnouncements();
         loadAnnouncementsBanner();
         document.getElementById("new-announcement").value = "";
+        lastAnnouncementTimestamp = Date.now();
     }
 }
 
@@ -136,6 +153,7 @@ function deleteAnnouncement(index) {
     localStorage.setItem("announcements", JSON.stringify(announcements));
     loadAnnouncements();
     loadAnnouncementsBanner();
+    lastAnnouncementTimestamp = Date.now();
 }
 
 // Load Announcements Banner for display across the site
@@ -148,10 +166,29 @@ function loadAnnouncementsBanner() {
         if (announcements.length > 0) {
             // Display the most recent announcement in the banner
             const latest = announcements[announcements.length - 1];
-            banner.textContent = `${latest.text} - ${latest.author}`;
+            banner.textContent = `📢 ${latest.text} - ${latest.author}`;
             banner.style.display = "block";
         } else {
             banner.style.display = "none";
+        }
+    }
+}
+
+// Check for new announcements regularly (cross-device)
+function checkForAnnouncementUpdates() {
+    // Load the current announcements
+    let announcements = JSON.parse(localStorage.getItem("announcements")) || [];
+    
+    if (announcements.length > 0) {
+        const latestAnnouncement = announcements[announcements.length - 1];
+        
+        // If there's a newer announcement than what we last saw
+        if (latestAnnouncement.date > lastAnnouncementTimestamp) {
+            lastAnnouncementTimestamp = latestAnnouncement.date;
+            loadAnnouncementsBanner();
+            if (document.getElementById("announcement-list")) {
+                loadAnnouncements();
+            }
         }
     }
 }
@@ -244,8 +281,12 @@ function approveUser(index) {
     let pendingUsers = JSON.parse(localStorage.getItem("pendingUsers")) || [];
     const user = pendingUsers[index];
     
-    // Add to users object
+    // Get latest users list
+    users = JSON.parse(localStorage.getItem("users")) || {};
+    
+    // Add to users object and save to localStorage
     users[user.username] = { password: user.password, role: "employee" };
+    localStorage.setItem("users", JSON.stringify(users));
     
     // Remove from pending users
     pendingUsers.splice(index, 1);
@@ -256,6 +297,7 @@ function approveUser(index) {
     
     // Reload the list
     loadPendingUsers();
+    loadUserManagement();
     
     alert(`User ${user.username} has been approved!`);
 }
@@ -278,36 +320,168 @@ function denyUser(index) {
     alert(`User request for ${username} has been denied.`);
 }
 
+// Load User Management (Admin Only)
+function loadUserManagement() {
+    const list = document.getElementById("user-management-list");
+    if (list) {
+        list.innerHTML = "";
+        
+        // Get latest users data
+        users = JSON.parse(localStorage.getItem("users")) || {};
+        
+        Object.entries(users).forEach(([username, userData]) => {
+            const li = document.createElement("li");
+            li.innerHTML = `<div><strong>${username}</strong> (${userData.role})</div>`;
+            
+            // Control buttons div
+            const controlsDiv = document.createElement("div");
+            
+            // Skip delete/role changes for current user
+            if (username !== localStorage.getItem("currentUser")) {
+                // Add role toggle button
+                const roleBtn = document.createElement("button");
+                roleBtn.textContent = userData.role === "admin" ? "👨‍💼 Make Employee" : "🛡️ Make Admin";
+                roleBtn.className = "role-btn";
+                roleBtn.onclick = function() { toggleUserRole(username); };
+                
+                // Add delete button
+                const deleteBtn = document.createElement("button");
+                deleteBtn.textContent = "❌ Delete";
+                deleteBtn.className = "deny-btn";
+                deleteBtn.onclick = function() { deleteUser(username); };
+                
+                controlsDiv.appendChild(roleBtn);
+                controlsDiv.appendChild(deleteBtn);
+            } else {
+                // Current user indicator
+                const currentLabel = document.createElement("span");
+                currentLabel.textContent = "Current User";
+                currentLabel.className = "current-user-label";
+                controlsDiv.appendChild(currentLabel);
+            }
+            
+            li.appendChild(controlsDiv);
+            list.appendChild(li);
+        });
+    }
+}
+
+// Add New User (Admin Function)
+function addNewUser() {
+    const username = document.getElementById("add-username").value;
+    const password = document.getElementById("add-password").value;
+    const role = document.getElementById("add-role").value;
+    
+    if (!username || !password) {
+        alert("Username and password are required!");
+        return;
+    }
+    
+    // Get latest users data
+    users = JSON.parse(localStorage.getItem("users")) || {};
+    
+    if (users[username]) {
+        alert("Username already exists!");
+        return;
+    }
+    
+    // Add new user
+    users[username] = { password, role };
+    localStorage.setItem("users", JSON.stringify(users));
+    
+    // Log the addition
+    saveActivity(`Added new user: ${username} with role: ${role}`);
+    
+    // Clear form and reload list
+    document.getElementById("add-username").value = "";
+    document.getElementById("add-password").value = "";
+    loadUserManagement();
+    
+    alert(`User ${username} has been added successfully!`);
+}
+
+// Toggle User Role (Admin/Employee)
+function toggleUserRole(username) {
+    // Get latest users data
+    users = JSON.parse(localStorage.getItem("users")) || {};
+    
+    if (users[username]) {
+        // Toggle role
+        const newRole = users[username].role === "admin" ? "employee" : "admin";
+        users[username].role = newRole;
+        localStorage.setItem("users", JSON.stringify(users));
+        
+        // Log the change
+        saveActivity(`Changed role for user: ${username} to ${newRole}`);
+        
+        // Reload the list
+        loadUserManagement();
+        
+        alert(`User ${username} is now an ${newRole}.`);
+    }
+}
+
+// Delete User
+function deleteUser(username) {
+    if (confirm(`Are you sure you want to delete user ${username}?`)) {
+        // Get latest users data
+        users = JSON.parse(localStorage.getItem("users")) || {};
+        
+        // Delete the user
+        delete users[username];
+        localStorage.setItem("users", JSON.stringify(users));
+        
+        // Log the deletion
+        saveActivity(`Deleted user: ${username}`);
+        
+        // Reload the list
+        loadUserManagement();
+        
+        alert(`User ${username} has been deleted.`);
+    }
+}
+
 // Check User Permissions and Update UI
 function checkPermissions() {
     const userRole = localStorage.getItem("userRole");
     
     // Hide admin-only elements for non-admin users
     if (userRole !== "admin") {
-        // Hide admin logs button
-        const adminLogsBtn = document.getElementById("admin-logs-btn");
-        if (adminLogsBtn) {
-            adminLogsBtn.style.display = "none";
-        }
+        // Hide admin-only buttons
+        const adminElements = [
+            "admin-logs-btn", 
+            "pending-users-btn",
+            "user-management-btn"
+        ];
         
-        // Hide pending users button
-        const pendingUsersBtn = document.getElementById("pending-users-btn");
-        if (pendingUsersBtn) {
-            pendingUsersBtn.style.display = "none";
-        }
+        adminElements.forEach(id => {
+            const element = document.getElementById(id);
+            if (element) element.style.display = "none";
+        });
     }
 }
 
+// Start announcement checking interval
+let announcementCheckInterval;
+
 // Ensure Data Loads When Dashboard Opens
 window.onload = function() {
+    // Load initial data
     loadAnnouncementsBanner();
-    loadAnnouncements();
-    loadActivityLogs();
-    loadPendingUsers();
-    checkPermissions();
     
-    // If on dashboard page, show announcements tab by default
+    // Set up cross-device announcement checking
+    clearInterval(announcementCheckInterval);
+    announcementCheckInterval = setInterval(checkForAnnouncementUpdates, ANNOUNCEMENT_CHECK_INTERVAL);
+    
+    // Load page-specific elements
     if (window.location.href.includes("dashboard.html")) {
+        loadAnnouncements();
+        loadActivityLogs();
+        loadPendingUsers();
+        loadUserManagement();
+        checkPermissions();
+        
+        // Show announcements tab by default
         showTab("announcements");
     }
 };
