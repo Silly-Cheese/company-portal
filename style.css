@@ -79,6 +79,7 @@ ul li {
     border-radius: 5px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 
 ul li button {
@@ -88,4 +89,36 @@ ul li button {
     padding: 5px;
     cursor: pointer;
     border-radius: 3px;
+    margin-left: 5px;
+}
+
+/* For approval buttons */
+.approve-btn {
+    background: green !important;
+}
+
+.deny-btn {
+    background: red !important;
+}
+
+/* Announcements banner */
+.announcements-banner {
+    background-color: #ffe066;
+    color: #333;
+    padding: 10px;
+    text-align: center;
+    font-weight: bold;
+    border-bottom: 1px solid #ddd;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+a {
+    color: #007BFF;
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
 }
