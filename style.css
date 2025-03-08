@@ -14,7 +14,7 @@ body {
     border-radius: 8px;
 }
 
-input, textarea {
+input, textarea, select {
     display: block;
     margin: 10px auto;
     padding: 10px;
@@ -67,6 +67,11 @@ h2 {
     color: #007BFF;
 }
 
+h3 {
+    color: #0056b3;
+    margin-top: 20px;
+}
+
 ul {
     list-style: none;
     padding: 0;
@@ -101,6 +106,10 @@ ul li button {
     background: red !important;
 }
 
+.role-btn {
+    background: #007BFF !important;
+}
+
 /* Announcements banner */
 .announcements-banner {
     background-color: #ffe066;
@@ -121,4 +130,18 @@ a {
 
 a:hover {
     text-decoration: underline;
+}
+
+.add-user-form {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.current-user-label {
+    font-style: italic;
+    color: #666;
+    margin-right: 10px;
 }
